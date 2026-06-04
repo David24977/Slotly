@@ -1,0 +1,70 @@
+services:
+
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: slotly-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - slotly-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # pgAdmin - gestor visual de PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: slotly-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - slotly-network
+
+  # Spring Boot - backend
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slotly-app
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/slotly
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "${APP_PORT}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - slotly-network
+
+volumes:
+  postgres_data:
+
+networks:
+  slotly-network:
+    driver: bridge
