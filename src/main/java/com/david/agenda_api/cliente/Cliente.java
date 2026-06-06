@@ -1,4 +1,4 @@
-package com.david.agenda_api.usuario;
+package com.david.agenda_api.cliente;
 
 import com.david.agenda_api.common.BaseEntity;
 import jakarta.persistence.*;
@@ -12,13 +12,13 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "clientes")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Usuario extends BaseEntity implements UserDetails {
+public class Cliente extends BaseEntity implements UserDetails {
 
     @Column(nullable = false, length = 100)
     private String nombre;
@@ -26,15 +26,20 @@ public class Usuario extends BaseEntity implements UserDetails {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(nullable = false, length = 255)
-    private String password;
+    @Column(name = "google_id", length = 100)
+    private String googleId;
+
+    //Identifica el método de acceso para controlar los flujos en el futuro
+    @Column(name = "auth_provider", nullable = false, length = 20)
+    @Builder.Default
+    private String authProvider = "GOOGLE";
+
+    @Column(nullable = false)
+    private LocalDateTime fechaRegistro;
 
     @Column(nullable = false)
     @Builder.Default
     private Boolean activo = true;
-
-    @Column(nullable = false)
-    private LocalDateTime fechaRegistro;
 
     @PrePersist
     protected void onCreate() {
@@ -43,13 +48,19 @@ public class Usuario extends BaseEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Asignamos el rol de comercio (propietario)
-        return List.of(new SimpleGrantedAuthority("ROLE_COMERCIO"));
+        return List.of(new SimpleGrantedAuthority("ROLE_CLIENTE"));
     }
 
     @Override
     public String getUsername() {
-        return this.email; // El login es el email
+        return this.email;
+    }
+
+    // Como los clientes se loguean con Googleo Magic Link no suelen usar este password en el filtro tradicional,
+    // pero la interfaz obliga a implementarlo. Devolvemos null o un string vacío.
+    @Override
+    public String getPassword() {
+        return "";
     }
 
     @Override
@@ -69,6 +80,6 @@ public class Usuario extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.activo; // Vinculado al campo activo
+        return this.activo;
     }
 }
