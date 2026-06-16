@@ -1,5 +1,6 @@
 package com.david.agenda_api.security;
 
+import com.david.agenda_api.cliente.dto.ClienteResponseDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

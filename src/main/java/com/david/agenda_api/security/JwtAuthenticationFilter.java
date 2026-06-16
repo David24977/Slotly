@@ -34,10 +34,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String token;
         final String correoUsuario;
 
-        // Si no viene la cabecera o no empieza con el formato correcto, al siguiente filtro
-        if (cabecera == null || !cabecera.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        //Si la ruta es la del magic-link, o si no viene la cabecera Authorization, dejamos continuar el flujo
+        String authHeader = request.getHeader("Authorization");
+        String requestURI = request.getRequestURI();
+
+        if (requestURI.startsWith("/api/magic-link") || authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response); // <-- Deja pasar la petición a permitAll
+            return; // Cortamos la ejecución del filtro aquí para que no valide nada
         }
 
         token = cabecera.substring(7);

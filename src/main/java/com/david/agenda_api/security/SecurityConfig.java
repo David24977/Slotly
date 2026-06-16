@@ -26,7 +26,9 @@ public class SecurityConfig {
                 // Reglas de acceso a las rutas
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos de autenticación (Login y Registro)
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/magic-link/**").permitAll()
+
+                        .requestMatchers("/api/comercios/**").permitAll()
 
                         // El resto de la API de Slotly requerirá estar autenticado
                         .anyRequest().authenticated()
